@@ -1,5 +1,6 @@
+# utils/data_loader.py
+
 import torch
-from torch.utils.data import DataLoader, TensorDataset
 
 def collapse_weights(model, sparsity=0.5):
     """
@@ -17,4 +18,5 @@ def reexpand_weights(model, recovery_rate=0.1):
     with torch.no_grad():
         for param in model.parameters():
             mask = param == 0
-            param[mask] = torch.randn(mask.sum(), device=param.device) * recovery_rate
+            if mask.sum() > 0:
+                param[mask] = torch.randn(mask.sum(), device=param.device) * recovery_rate

@@ -1,3 +1,5 @@
+# models/surge_collapse_net.py
+
 import torch
 import torch.nn as nn
 from .stable_max import StableMax
