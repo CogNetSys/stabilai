@@ -1,1 +1,10 @@
-site_name: My Docs
+site_name: StabilAI Documentation
+nav:
+  - Home: index.md
+  - User Guide:
+      - Introduction: user_guide/introduction.md
+      - Setup: user_guide/setup.md
+      - Training: user_guide/training.md
+      - Deployment: user_guide/deployment.md
+theme:
+  name: material
