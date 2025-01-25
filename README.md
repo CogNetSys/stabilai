@@ -26,8 +26,8 @@ The concepts of **numerical stability**, **delayed generalization**, and the mat
 - Inspired the integration of numerical stability concepts into the training pipeline.
 - Provided theoretical insights that guided the design of the SurgeCollapseNet architecture.
 
-### **3. [Your Name] (Practical Implementation and Training Framework)**
-Your contributions focused on transforming theoretical insights into a **scalable, application-driven implementation**:
+### **3. Michael G Young (Practical Implementation and Training Framework)**
+Michael focused on transforming theoretical insights into a **scalable, application-driven implementation**:
 - Designed the SurgeCollapseNet architecture with **multi-layer perceptrons**, **ReLU activations**, and **adaptive regularization**.
 - Integrated **TensorBoard** for real-time visualization of training metrics.
 - Added advanced training techniques, including:
