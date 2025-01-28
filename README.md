@@ -1,98 +1,104 @@
-# Surge-Collapse Training with Entropy Dynamics
+# StabilAI
 
-Welcome to the **Surge-Collapse Training with Entropy Dynamics** project repository. This project introduces innovative training techniques aimed at stabilizing neural network training through adaptive weight pruning and re-expansion, coupled with entropy-based analysis.
+Welcome to the StabilAI project! This repository encapsulates the training and evaluation of the SurgeCollapseNet model, a custom neural network tailored for binary classification tasks using PyTorch.
 
----
+## 📌 About This Project
 
-## **Table of Contents**
+StabilAI is designed to demonstrate advanced machine learning techniques, including synthetic data generation, custom neural network architectures, hyperparameter tuning, and comprehensive model evaluation. The project emphasizes modularity, configurability, and professional best practices, making it both robust and adaptable for various classification challenges.
 
-- [Overview](#overview)
-- [Features](#features)
-- [Installation](#installation)
-- [Usage](#usage)
-- [Documentation](#documentation)
-- [Contributions](#contributions)
-- [License](#license)
+## 🔍 Features
 
----
+- **Synthetic Data Generation**: Create synthetic datasets for binary classification.
+- **Custom Neural Network Models**: Implement and toggle between Base Model, FastGrok, and Noise Models.
+- **Hyperparameter Tuning**: Centralized configuration for easy hyperparameter adjustments and optimization.
+- **Advanced Training Techniques**: Incorporates early stopping, learning rate scheduling, and gradient filtering.
+- **Model Evaluation**: Evaluate models using metrics like F1-score, precision, recall, and ROC-AUC.
+- **Visualization**: Monitor training progress and metrics using TensorBoard.
+- **Documentation**: Comprehensive documentation using MkDocs for easy navigation and understanding.
 
-## **Overview**
+## 🚀 Getting Started
 
-Surge-Collapse Training is an adaptive mechanism that dynamically prunes and re-expands neural network weights based on entropy measurements. This approach aims to enhance training stability, maintain energy balance, and improve generalization across various tasks and architectures.
+### Prerequisites
 
----
+- Python 3.8+
+- Virtual Environment (`venv`)
 
-## **Features**
-
-- **Adaptive Weight Pruning (Collapse)**: Removes low-magnitude weights to promote sparsity.
-- **Weight Re-Expansion (Surge)**: Reintroduces pruned weights with controlled noise to prevent dead weights.
-- **Entropy-Based Analysis**: Monitors activation and target entropy to guide training dynamics.
-- **Custom Optimizers**: Includes the ⊥Grad optimizer to prevent Naïve Loss Minimization.
-- **StableMax Activation**: A numerically stable Softmax variant to prevent Softmax Collapse.
-- **Comprehensive Documentation**: Detailed guides and explanations using MkDocs.
-
----
-
-## **Installation**
+### Installation
 
 1. **Clone the Repository**
 
-   ```bash
-   git clone https://github.com/your-username/your-repo.git
-   cd your-repo
+    ```bash
+    git clone https://github.com/yourusername/stabilai.git
+    cd stabilai
+    ```
 
----
+2. **Set Up Virtual Environment**
 
-Create a Virtual Environment
+    ```bash
+    python3 -m venv venv
+    source venv/bin/activate
+    ```
 
-bash
-Copy
-python3 -m venv venv
-source venv/bin/activate
-Install Dependencies
+3. **Install Dependencies**
 
-bash
-Copy
-pip install -r requirements.txt
-Note: Ensure that requirements.txt includes all necessary packages, such as torch, mkdocs, mkdocs-material, etc.
+    ```bash
+    pip install -r requirements.txt
+    ```
 
-Usage
-Run Experiments
+4. **Run the Application**
 
-Navigate to the scripts/ directory and execute the desired training scripts.
+    ```bash
+    python app/main.py --config app/config.py
+    ```
 
-bash
-Copy
-python train.py
-View Documentation
+### Configuration
 
-Serve the documentation locally using MkDocs.
+All key parameters are centralized in the `app/config.py` file. This setup allows easy toggling between different models (Base Model, FastGrok, Noise Model) and adjusting hyperparameters without delving into the core codebase.
 
-bash
-Copy
+### Documentation
+
+Generate and view the documentation using MkDocs:
+
+```bash
 mkdocs serve
-Access the documentation at http://127.0.0.1:8000/ in your browser.
+Access the documentation at http://127.0.0.1:8000/.
+```
 
-Build Documentation
+📚 Documentation
+Comprehensive documentation is available in the docs/ directory and can be served locally or hosted via GitHub Pages.
 
-Generate static site files for deployment.
+📄 License
+This project is licensed under the MIT License - see the LICENSE file for details.
 
-bash
-Copy
-mkdocs build
-Documentation
-Comprehensive documentation is available using MkDocs with the Material theme. It covers all aspects of the project, including model architecture, training mechanisms, experiments, results, and more.
+### 5. `app/__init__.py`
 
-Access Documentation
+```python
+# app/__init__.py
+```
 
+# 📈 Centralized Configuration and Model Toggling  
+All key parameters are managed in the `app/config.py` file. This setup allows you to toggle between different models and adjust hyperparameters without modifying the core codebase. Here's how to adjust settings:
 
-## **Credits and Contributions**
-This project stands on the shoulders of giants:
-- **Richard Aragon** for his groundbreaking exploration of entropy-driven adaptive training dynamics.
-- **Lucas Prieto et al.** for the inspiring research paper *"Grokking at the Edge of Numerical Stability"*.
-- Open-source AI and machine learning communities for tools like PyTorch, TensorBoard, and more.
+### Choose Model Type  
+In `app/config.py`, set the `--model_type` argument:  
 
----
+```python
+parser.add_argument('--model_type', type=str, choices=['base', 'fastgrok', 'noise'], default='base', help='Type of model to train')
+```
 
-## **License**
-This project is licensed under the [MIT License](LICENSE). Feel free to use, modify, and distribute the code.
+### Enable GAT  
+To enable Graph Attention Networks (GAT), add the `--use_gat` flag:  
+
+```bash
+python app/main.py --config app/config.py --use_gat
+```
+
+### Adjust Hyperparameters  
+Modify hyperparameters like learning rate, batch size, noise levels, etc., directly in `app/config.py` or pass them as command-line arguments:  
+
+```bash
+python app/main.py --config app/config.py --learning_rate 0.001 --batch_size 128
+```
+
+### Centralized Hyperparameter Tuning  
+All hyperparameters are centralized, allowing easy integration with hyperparameter tuning tools or scripts. Adjust parameters in `app/config.py` and rerun the training or tuning scripts without searching through the codebase.  

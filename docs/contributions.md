@@ -1,7 +1,3 @@
-Here’s your updated documentation with emoji-enhanced headings and the contributions from **Jaerin Lee et al.'s paper** integrated into the content.
-
----
-
 # 📊 **Contributions**
 
 The **Surge-Collapse Training with Entropy Dynamics** project is a collaborative effort involving the combined expertise and dedication of key contributors. This section delineates the distinct contributions of each author, highlighting their unique roles and collaborative synergy.
@@ -36,7 +32,7 @@ The **Surge-Collapse Training with Entropy Dynamics** project is a collaborative
 
 ## 🚀 **3. Michael Young**
 
-**Affiliation**: https://www.stabilai.com/
+**Affiliation**: [Stabil AI - www.stabilai.com](https://www.stabilai.com/)
 
 ### **Contributions:**
 
@@ -51,6 +47,8 @@ The **Surge-Collapse Training with Entropy Dynamics** project is a collaborative
 ## 📈 **4. Jaerin Lee et al.**
 
 **Affiliation**: Seoul National University, Korea
+
+**Paper**: [Grokfast: Accelerated Grokking by Amplifying Slow Gradients](https://arxiv.org/html/2405.20233v2)
 
 ### **Contributions**:
 

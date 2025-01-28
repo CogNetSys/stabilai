@@ -6,12 +6,12 @@ The core of the **Surge-Collapse Training with Entropy Dynamics** project revolv
 
 ## 🏗️ **Architecture Overview**
 
-- **🔹 Input Layer**: Receives input data vectors.
-- **🔹 Hidden Layer**: 
-  - **Type**: Fully Connected (Linear)
-  - **Activation**: ReLU (Rectified Linear Unit)
-  - **Units**: 256
-- **🔹 Output Layer**: Produces the final predictions.
+- **Input Layer**: Receives input data vectors.
+- **Hidden Layer**: 
+    - **Type**: Fully Connected (Linear)
+    - **Activation**: ReLU (Rectified Linear Unit)
+    - **Units**: 256
+- **Output Layer**: Produces the final predictions.
 
 ---
 
@@ -86,15 +86,15 @@ def reexpand_weights(model, recovery_rate=0.1):
 
 The Surge-Collapse process adapts based on **activation entropy levels**, ensuring that the network dynamically responds to its training state.
 
-### 🔹 **High Entropy**:
+### **High Entropy**:
 - **Trigger Collapse** to reduce redundancy.
 - **Inject Energy** to maintain training momentum.
 - Apply **Entropy Pumps** for information flow.
 
-### 🔹 **Low Entropy**:
+### **Low Entropy**:
 - Add **Controlled Noise** to inputs to sustain information diversity.
 
-### 🔹 **Entropy Plateaus**:
+### **Entropy Plateaus**:
 - **Initiate Collapse** for regularization to prevent stagnation.
 
 ---

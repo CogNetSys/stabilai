@@ -1,11 +1,14 @@
+# requirements.txt
+
 torch
 torchvision
-transformers
+tensorboard
 scikit-learn
-matplotlib
 seaborn
-numpy
-tqdm
-streamlit
-pyngrok
+pynvml
+torch-scatter
+torch-sparse
+torch-cluster
+torch-spline-conv
+torch-geometric
 mkdocs
