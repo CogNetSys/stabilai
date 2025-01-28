@@ -1,93 +1,92 @@
-# **SurgeCollapseNet: Adaptive Learning for Generalization**
+# Surge-Collapse Training with Entropy Dynamics
 
-SurgeCollapseNet is a neural network architecture and training methodology inspired by the concept of balancing **"surge"** (active learning of meaningful patterns) and **"collapse"** (reducing redundancy for generalization). This project integrates ideas from **entropy-driven learning**, **numerical stability**, and **pragmatic model design** to create a robust system for binary classification and beyond.
-
----
-
-## **Key Features**
-- A fully connected feedforward neural network designed for binary classification tasks.
-- Adaptive training dynamics inspired by the **surge-collapse** philosophy.
-- Advanced training techniques including **early stopping**, **learning rate scheduling**, and **entropy-based evaluation**.
-- TensorBoard integration for visualization of training and validation metrics.
-- Modular, extensible code that encourages experimentation and collaboration.
+Welcome to the **Surge-Collapse Training with Entropy Dynamics** project repository. This project introduces innovative training techniques aimed at stabilizing neural network training through adaptive weight pruning and re-expansion, coupled with entropy-based analysis.
 
 ---
 
-## **Contributors**
-### **1. Richard Aragon (Entropy-Driven Dynamics)**
-Richard contributed the foundational idea of using **adaptive surge-collapse dynamics** for neural networks:
-- Introduced **weight collapse and surge** mechanisms driven by activation entropy.
-- Developed an **adaptive entropy thresholding system** to dynamically guide training.
-- Inspired the inclusion of entropy tracking for evaluating model confidence and uncertainty.
+## **Table of Contents**
 
-### **2. Lucas Prieto et al. (The Grokking Paper Authors)**
-The concepts of **numerical stability**, **delayed generalization**, and the mathematical underpinnings of "grokking" in neural networks were drawn from the groundbreaking research in the paper:
-- Highlighted the importance of **logit stability** and the conditions under which generalization occurs.
-- Inspired the integration of numerical stability concepts into the training pipeline.
-- Provided theoretical insights that guided the design of the SurgeCollapseNet architecture.
-
-### **3. Michael G Young (Practical Implementation and Training Framework)**
-Michael focused on transforming theoretical insights into a **scalable, application-driven implementation**:
-- Designed the SurgeCollapseNet architecture with **multi-layer perceptrons**, **ReLU activations**, and **adaptive regularization**.
-- Integrated **TensorBoard** for real-time visualization of training metrics.
-- Added advanced training techniques, including:
-  - **Early stopping** to prevent overfitting.
-  - **Learning rate scheduling** for smoother convergence.
-- Built a modular training pipeline with hooks for entropy measurement, loss tracking, and evaluation.
+- [Overview](#overview)
+- [Features](#features)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Documentation](#documentation)
+- [Contributions](#contributions)
+- [License](#license)
 
 ---
 
-## **Code Structure**
-```
-📁 SurgeCollapseNet
-├── 📁 models
-│   ├── surge_collapse_net.py       # Model architecture for SurgeCollapseNet
-├── 📁 training
-│   ├── train_model.py              # Training loop with early stopping and TensorBoard integration
-│   ├── utils.py                    # Helper functions (entropy calculation, metric tracking)
-├── 📁 datasets
-│   ├── synthetic_data_loader.py    # Code for generating synthetic binary classification datasets
-├── 📁 visualizations
-│   ├── tensorboard_logs            # TensorBoard logs for training and validation metrics
-├── README.md                       # This file
-└── requirements.txt                # Python dependencies
-```
+## **Overview**
+
+Surge-Collapse Training is an adaptive mechanism that dynamically prunes and re-expands neural network weights based on entropy measurements. This approach aims to enhance training stability, maintain energy balance, and improve generalization across various tasks and architectures.
 
 ---
 
-## **How to Run the Project**
-1. **Clone the repository**:
-   ```bash
-   git clone https://github.com/<your-username>/SurgeCollapseNet.git
-   cd SurgeCollapseNet
-   ```
+## **Features**
 
-2. **Install dependencies**:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-3. **Train the model**:
-   Run the training script with default parameters:
-   ```bash
-   python training/train_model.py
-   ```
-
-4. **Visualize training**:
-   Launch TensorBoard to monitor training and validation metrics:
-   ```bash
-   tensorboard --logdir=visualizations/tensorboard_logs
-   ```
-
-5. **Evaluate the model**:
-   After training, load the best model and evaluate it on the validation dataset:
-   ```bash
-   python training/evaluate_model.py
-   ```
+- **Adaptive Weight Pruning (Collapse)**: Removes low-magnitude weights to promote sparsity.
+- **Weight Re-Expansion (Surge)**: Reintroduces pruned weights with controlled noise to prevent dead weights.
+- **Entropy-Based Analysis**: Monitors activation and target entropy to guide training dynamics.
+- **Custom Optimizers**: Includes the ⊥Grad optimizer to prevent Naïve Loss Minimization.
+- **StableMax Activation**: A numerically stable Softmax variant to prevent Softmax Collapse.
+- **Comprehensive Documentation**: Detailed guides and explanations using MkDocs.
 
 ---
 
-## **Credits**
+## **Installation**
+
+1. **Clone the Repository**
+
+   ```bash
+   git clone https://github.com/your-username/your-repo.git
+   cd your-repo
+
+---
+
+Create a Virtual Environment
+
+bash
+Copy
+python3 -m venv venv
+source venv/bin/activate
+Install Dependencies
+
+bash
+Copy
+pip install -r requirements.txt
+Note: Ensure that requirements.txt includes all necessary packages, such as torch, mkdocs, mkdocs-material, etc.
+
+Usage
+Run Experiments
+
+Navigate to the scripts/ directory and execute the desired training scripts.
+
+bash
+Copy
+python train.py
+View Documentation
+
+Serve the documentation locally using MkDocs.
+
+bash
+Copy
+mkdocs serve
+Access the documentation at http://127.0.0.1:8000/ in your browser.
+
+Build Documentation
+
+Generate static site files for deployment.
+
+bash
+Copy
+mkdocs build
+Documentation
+Comprehensive documentation is available using MkDocs with the Material theme. It covers all aspects of the project, including model architecture, training mechanisms, experiments, results, and more.
+
+Access Documentation
+
+
+## **Credits and Contributions**
 This project stands on the shoulders of giants:
 - **Richard Aragon** for his groundbreaking exploration of entropy-driven adaptive training dynamics.
 - **Lucas Prieto et al.** for the inspiring research paper *"Grokking at the Edge of Numerical Stability"*.
@@ -97,8 +96,3 @@ This project stands on the shoulders of giants:
 
 ## **License**
 This project is licensed under the [MIT License](LICENSE). Feel free to use, modify, and distribute the code.
-
----
-
-## **Contributing**
-We welcome contributions! Feel free to submit pull requests or raise issues to help improve SurgeCollapseNet. See our [CONTRIBUTING.md](CONTRIBUTING.md) file for guidelines.

@@ -1,6 +1,22 @@
 # utils/data_loader.py
 
 import torch
+from torch.utils.data import DataLoader, TensorDataset
+
+def create_synthetic_data_loader(num_samples, batch_size, input_size, output_size):
+    """
+    Function to create a synthetic dataset for binary classification.
+    Generates random input data and binary output labels based on a simple rule.
+    """
+    # Generate random input data
+    inputs = torch.randn(num_samples, input_size)
+    
+    # Binary target generation: sum of inputs > 0
+    targets = (inputs.sum(dim=1) > 0).long()
+    
+    # Create a DataLoader
+    dataset = TensorDataset(inputs, targets)
+    return DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
 def collapse_weights(model, sparsity=0.5):
     """

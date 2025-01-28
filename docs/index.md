@@ -1,17 +1,17 @@
-# Welcome to MkDocs
+# Surge-Collapse Training with Entropy Dynamics
 
-For full documentation visit [mkdocs.org](https://www.mkdocs.org).
+Welcome to the comprehensive documentation for the **Surge-Collapse Training with Entropy Dynamics** project. This project introduces innovative training techniques aimed at stabilizing neural network training through adaptive weight pruning and re-expansion, coupled with entropy-based analysis.
 
-## Commands
+---
 
-* `mkdocs new [dir-name]` - Create a new project.
-* `mkdocs serve` - Start the live-reloading docs server.
-* `mkdocs build` - Build the documentation site.
-* `mkdocs -h` - Print help message and exit.
+## **Table of Contents**
 
-## Project layout
-
-    mkdocs.yml    # The configuration file.
-    docs/
-        index.md  # The documentation homepage.
-        ...       # Other markdown pages, images and other files.
+- [About](about.md)
+- [Model Architecture](model_architecture.md)
+- [Surge-Collapse Training](surge_collapse_training.md)
+- [Experiments](experiments.md)
+- [Results Visualization](results_visualization.md)
+- [Use Cases](use_cases.md)
+- [Next Steps](next_steps.md)
+- [Contributions](contributions.md)
+- [References](references.md)
