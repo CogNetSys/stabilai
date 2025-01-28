@@ -41,14 +41,18 @@ StabilAI is designed to demonstrate advanced machine learning techniques, includ
 
 3. **Install Dependencies**
 
+**Note:** this installs torch 2.5.1 configured for CUDA 12.4. Run 'nvcc --version' to determine your CUDA version. If your CUDA is different then change the number from 124 to 121 if you use 12.1 or 118 if you use 11.8.
+
     ```bash
-    pip install -r requirements.txt
+    pip install torch torchvision tensorboard scikit-learn seaborn pynvml
+    pip install torch-scatter torch-sparse torch-cluster torch-spline-conv torch-geometric -f https://data.pyg.org/whl/torch-2.5.1+cu124.html
+
     ```
 
 4. **Run the Application**
 
     ```bash
-    python app/main.py --config app/config.py
+    PYTHONPATH=$(pwd) python3 app/main.py --config app/config.py
     ```
 
 ### Configuration
@@ -102,3 +106,17 @@ python app/main.py --config app/config.py --learning_rate 0.001 --batch_size 128
 
 ### Centralized Hyperparameter Tuning  
 All hyperparameters are centralized, allowing easy integration with hyperparameter tuning tools or scripts. Adjust parameters in `app/config.py` and rerun the training or tuning scripts without searching through the codebase.  
+
+# What Next?
+
+1. Add Learning Rate Scheduler:
+
+2. Incorporate learning rate schedulers to adjust the learning rate during training based on validation metrics.
+
+3. Implement Early Stopping with Patience:
+
+4. Enhance the early stopping mechanism to monitor additional metrics or implement more sophisticated stopping criteria.
+
+5. Save and Load Model Checkpoints:
+
+6. Implement functionality to save intermediate model checkpoints and load them for resuming training or inference.

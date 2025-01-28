@@ -2,10 +2,7 @@
 
 import torch
 import torch.nn as nn
-from app.models.base_model import BaseModel
-from app.models.fastgrok_model import FastGrokModel
-from app.models.noise_model import NoiseModel
-from app.models.surge_collapse_net import StableMaxCrossEntropy
+from app.models.surge_collapse_net import SurgeCollapseNet
 from app.utils.optimizer import OrthogonalGradientOptimizer
 from app.utils.metrics import run_eval
 from app.utils.visualization import plot_confusion_matrix, plot_roc_curve, plot_metrics
@@ -13,8 +10,7 @@ from app.utils.gradfilter import gradfilter_ma, gradfilter_ema
 from app.data.data_loader import get_data_loaders, add_gaussian_noise
 import logging
 import os
-
-# training.py
+from sklearn.metrics import classification_report
 
 def reset_and_inject_noise(model, grad_norms, threshold, noise_level):
     """
@@ -101,13 +97,39 @@ def train_fastgrokkingrush(
     """
     Comprehensive training loop with Surge-Collapse, Entropy-Based Diagnostics,
     and Dataset Noise Injection.
+
+    Args:
+        model (nn.Module): The neural network model.
+        train_loader (DataLoader): Training data loader.
+        val_loader (DataLoader): Validation data loader.
+        criterion (nn.Module): Loss function.
+        optimizer (Optimizer): Optimizer.
+        device (str): Device to train on ('cuda' or 'cpu').
+        epochs (int): Number of training epochs.
+        early_stopping_patience (int): Early stopping patience.
+        writer (SummaryWriter): TensorBoard SummaryWriter for logging.
+        use_grokfast (bool): Whether to use Grokfast gradient filtering.
+        grokfast_type (str): Type of Grokfast filtering ('ema' or 'ma').
+        alpha (float): EMA momentum.
+        lamb (float): Amplification factor.
+        window_size (int): Window size for MA.
+        filter_type (str): Filter type for MA ('mean' or 'sum').
+        warmup (bool): Whether to enable warmup for MA.
+        gradient_threshold (float): Threshold for stale gradients.
+        noise_level (float): Noise level for injected noise.
+        dataset_noise_level (float): Dataset noise injection level.
+        entropy_threshold (float): Entropy threshold for Surge-Collapse.
+        run_dir (str): Directory to save logs and models.
+
+    Returns:
+        history (dict): Dictionary containing training history.
     """
     model.to(device)
     logging.info(f"[FastGrokkingRush] Training on device={device}...")
-    
+
     best_val_f1 = 0.0
     epochs_no_improve = 0
-    
+
     history = {
         'train_loss': [],
         'val_loss': [],
@@ -117,7 +139,7 @@ def train_fastgrokkingrush(
         'layer_activation_entropy': {},
         'reset_params': []
     }
-    
+
     # Initialize Grokfast gradient storage
     if use_grokfast and grokfast_type == 'ema':
         grads = None  # Will be initialized in gradfilter_ema
@@ -125,22 +147,22 @@ def train_fastgrokkingrush(
         grads = None  # Will be initialized in gradfilter_ma
     else:
         grads = None  # Not used
-    
+
     for epoch in range(1, epochs + 1):
         model.train()
         running_loss = 0.0
-        
+
         # Dictionaries to accumulate layer-wise stats
         epoch_activation_entropy = {}
-        
+
         # Training pass
         for Xb, yb in train_loader:
             Xb, yb = Xb.to(device), yb.to(device)
-            
+
             # Inject noise into dataset if applicable
             if dataset_noise_level > 0.0:
                 Xb = add_gaussian_noise(Xb, noise_level=dataset_noise_level)
-            
+
             optimizer.zero_grad()
 
             logits, activations = model(Xb)  # Capture activations
@@ -217,7 +239,9 @@ def train_fastgrokkingrush(
             writer.add_text("Classification Report/Val", report_text, epoch)
 
         # Update learning rate scheduler
-        optimizer.base_optimizer.param_groups[0]['lr']  # Access base optimizer
+        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+            optimizer.base_optimizer, mode='max', factor=0.5, patience=5, verbose=True
+        )
         scheduler.step(val_f1)
 
         # Check for improvement
@@ -254,8 +278,10 @@ def train_fastgrokkingrush(
                 history['reset_params'][-1].extend(reset_params)
                 logging.info(f"Triggered Surge-Collapse: Reset and injected noise into parameters: {reset_params}")
 
-    # Final metrics plot
-    plot_metrics(history['train_loss'], history['val_loss'], history['val_f1'])
+    # Final metrics plot (optional)
+    if writer:
+        # You can create custom plots here or use external visualization
+        pass
 
     return history
 
@@ -281,6 +307,7 @@ def classification_report_to_text(report):
     accuracy = report.get('accuracy', 0)
     report_str += f"Overall Accuracy: {accuracy:.4f}\n"
     return report_str
+
 
 def main(config_path='app/config.py'):
     # Load configuration

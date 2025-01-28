@@ -5,8 +5,6 @@ import torch.nn as nn
 from torch_geometric.nn import GATConv
 from collections import deque
 
-# surge_collapse_net.py
-
 class GATFeatureExtractor(nn.Module):
     """
     GAT-based feature extractor for input features.
@@ -84,48 +82,64 @@ class StableMaxCrossEntropy(nn.Module):
 
 class SurgeCollapseNet(nn.Module):
     """
-    SurgeCollapseNet architecture with controlled learning dynamics.
+    SurgeCollapseNet architecture with standard linear layers.
     """
-    def __init__(self, input_size=128, gat_hidden_dim=64, gat_out_dim=64, gat_heads=4, hidden_size=256, output_size=2, use_gat=True, activation_func='relu', use_batch_norm=True, use_dropout=False, dropout_rate=0.5, debug=False):
+    def __init__(
+        self,
+        input_size=128,
+        hidden_size=256,
+        output_size=2,
+        use_batch_norm=True,
+        use_dropout=False,
+        dropout_rate=0.5,
+        activation_func='relu',
+        debug=False
+    ):
         super(SurgeCollapseNet, self).__init__()
-        self.use_gat = use_gat
         self.use_batch_norm = use_batch_norm
         self.use_dropout = use_dropout
         self.dropout_rate = dropout_rate
         self.debug = debug
 
-        if self.use_gat:
-            self.gat_extractor = GATFeatureExtractor(input_dim=input_size, gat_hidden_dim=gat_hidden_dim, gat_out_dim=gat_out_dim, heads=gat_heads)
-            self.fc1 = nn.Linear(gat_out_dim, hidden_size)
-        else:
-            self.fc1 = nn.Linear(input_size, hidden_size)
-
-        # Activation function selection
-        if activation_func == 'relu':
-            self.activation = nn.ReLU()
-        elif activation_func == 'leaky_relu':
-            self.activation = nn.LeakyReLU(negative_slope=0.01)
-        elif activation_func == 'selu':
-            self.activation = nn.SELU()
-        elif activation_func == 'swish':
-            self.activation = nn.SiLU()  # Swish is known as SiLU in PyTorch
-        else:
-            raise ValueError(f"Invalid activation function: {activation_func}")
-
+        # Define layers
+        self.fc1 = nn.Linear(input_size, hidden_size)
+        self.activation = self._get_activation(activation_func)
+        
         if self.use_batch_norm:
             self.bn1 = nn.BatchNorm1d(hidden_size)
-            self.bn2 = nn.BatchNorm1d(hidden_size)
-
+        
         if self.use_dropout:
             self.dropout = nn.Dropout(self.dropout_rate)
-
+        
         self.fc2 = nn.Linear(hidden_size, hidden_size)
+        
+        if self.use_batch_norm:
+            self.bn2 = nn.BatchNorm1d(hidden_size)
+        
+        if self.use_dropout:
+            self.dropout2 = nn.Dropout(self.dropout_rate)
+        
         self.fc3 = nn.Linear(hidden_size, output_size)
-
+        
         # Hooks for activations and gradients
         self.activations = {}
         self.gradients = {}
         self._register_hooks()
+
+    def _get_activation(self, activation_func):
+        """
+        Return the activation function based on the name.
+        """
+        if activation_func == 'relu':
+            return nn.ReLU()
+        elif activation_func == 'leaky_relu':
+            return nn.LeakyReLU(negative_slope=0.01)
+        elif activation_func == 'selu':
+            return nn.SELU()
+        elif activation_func == 'swish':
+            return nn.SiLU()  # Swish is known as SiLU in PyTorch
+        else:
+            raise ValueError(f"Invalid activation function: {activation_func}")
 
     def _register_hooks(self):
         # Hooks to capture activations and gradients
@@ -140,8 +154,6 @@ class SurgeCollapseNet(nn.Module):
             return hook
 
         # Register hooks for activations
-        if self.use_gat:
-            self.gat_extractor.register_forward_hook(get_activation('gat_extractor'))
         self.fc1.register_forward_hook(get_activation('fc1'))
         self.activation.register_forward_hook(get_activation('activation'))
         self.fc2.register_forward_hook(get_activation('fc2'))
@@ -149,21 +161,11 @@ class SurgeCollapseNet(nn.Module):
         self.fc3.register_forward_hook(get_activation('fc3'))
 
         # Register hooks for gradients
-        if self.use_gat:
-            self.gat_extractor.register_full_backward_hook(get_gradient('gat_extractor'))
         self.fc1.register_full_backward_hook(get_gradient('fc1'))
         self.fc2.register_full_backward_hook(get_gradient('fc2'))
         self.fc3.register_full_backward_hook(get_gradient('fc3'))
 
     def forward(self, x):
-        if self.use_gat:
-            x = self.gat_extractor(x)
-            if self.debug:
-                print(f"After GATFeatureExtractor: {x.shape}")
-        else:
-            if self.debug:
-                print(f"Skipping GAT. Input shape: {x.shape}")
-
         x = self.fc1(x)
         if self.use_batch_norm:
             x = self.bn1(x)
@@ -176,7 +178,7 @@ class SurgeCollapseNet(nn.Module):
             x = self.bn2(x)
         x = self.activation(x)
         if self.use_dropout:
-            x = self.dropout(x)
+            x = self.dropout2(x)
 
         logits = self.fc3(x)
         return logits, self.activations
