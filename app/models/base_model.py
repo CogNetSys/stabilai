@@ -1,5 +1,3 @@
-# app/models/base_model.py
-
 import torch
 import torch.nn as nn
 
@@ -23,11 +21,16 @@ class BaseModel(nn.Module):
         self.fc2 = nn.Linear(hidden_size, hidden_size)
         self.relu2 = nn.ReLU()
         self.fc3 = nn.Linear(hidden_size, output_size)
-    
+        
     def forward(self, x):
+        activations = {}
         if self.use_gat:
             x = self.gat_extractor(x)
+            activations['gat_extractor'] = x
         x = self.relu(self.fc1(x))
+        activations['fc1'] = x
         x = self.relu2(self.fc2(x))
+        activations['fc2'] = x
         logits = self.fc3(x)
-        return logits
+        activations['fc3'] = logits
+        return logits, activations

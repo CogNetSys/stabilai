@@ -109,14 +109,12 @@ All hyperparameters are centralized, allowing easy integration with hyperparamet
 
 # What Next?
 
-1. Add Learning Rate Scheduler:
+1. Add Learning Rate Scheduler: Incorporate learning rate schedulers to adjust the learning rate during training based on validation metrics.
 
-2. Incorporate learning rate schedulers to adjust the learning rate during training based on validation metrics.
+2. Implement Early Stopping with Patience: Enhance the early stopping mechanism to monitor additional metrics or implement more sophisticated stopping criteria.
 
-3. Implement Early Stopping with Patience:
+3. Save and Load Model Checkpoints: Implement functionality to save intermediate model checkpoints and load them for resuming training or inference.
 
-4. Enhance the early stopping mechanism to monitor additional metrics or implement more sophisticated stopping criteria.
+4. Hyperparameter Optimization Tools: Integrate tools like Optuna or Hyperopt for automated hyperparameter tuning.
 
-5. Save and Load Model Checkpoints:
-
-6. Implement functionality to save intermediate model checkpoints and load them for resuming training or inference.
+5. Dockerization: Containerize your application using Docker for consistent environments across different machines.

@@ -1,9 +1,23 @@
-site_name: Surge-Collapse Training with Entropy Dynamics
+site_name: StabilAI
 theme:
-  name: material
+  name: 'material'
+  palette:
+    scheme: slate 
 nav:
   - Home: index.md
   - About: about.md
+  - StabilAI:
+    - Vision: stabilai/project_vision.md
+    - Roadmap: stabilai/project_roadmap.md
+  - Services: 
+    - Overview: services/overview.md
+    - ML Services: services/service_types.md
+    - Cloud Services: services/cloud.md
+    - Data Services: services/data.md
+    - SaaS Services: services/saas.md
+    - Compute Services: services/compute.md
+    - DevSecOps Services: services/devsecops.md
+    - Professional Services: services/professional.md
   - Model Architecture: model_architecture.md
   - Surge-Collapse Training: surge_collapse_training.md
   - Experiments: experiments.md
@@ -16,6 +30,8 @@ repo_url: https://github.com/your-username/your-repo
 repo_name: GitHub
 edit_uri: edit/main/docs/
 markdown_extensions:
+  - pymdownx.tasklist:
+      custom_checkbox: true
   - toc:
       permalink: true
   - tables

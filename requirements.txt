@@ -10,5 +10,7 @@ torch-scatter
 torch-sparse
 torch-cluster
 torch-spline-conv
-torch-geometric
+torch_geometric
+pydantic
+jinja2
 mkdocs

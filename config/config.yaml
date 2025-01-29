@@ -1,0 +1,40 @@
+train_size: 4000
+val_size: 1000
+ood_size: 1000
+input_dim: 128
+batch_size: 64
+model_type: "base"  # Options: "base", "fastgrok", "noise"
+num_epochs: 50
+learning_rate: 0.001
+weight_decay: 1e-5
+run_dir: "runs"
+
+# 🔹 **New Entry: Enable batch normalization**
+use_batch_norm: true
+
+# 🔹 **New Entry: Enable dropout**
+use_dropout: false  # Change to true to enable dropout
+
+# 🔹 **New Entry: Early Stopping Patience**
+early_stopping_patience: 10  # Number of epochs with no improvement after which training will be stopped
+
+# Advanced training options
+use_grokfast: false
+grokfast_type: "ema"
+alpha: 0.98
+lamb: 2.0
+window_size: 100
+filter_type: "mean"
+warmup: true
+
+# Surge-Collapse & Entropy Based Training
+gradient_threshold: 0.001
+noise_level: 0.001
+dataset_noise_level: 0.0
+entropy_threshold: 1.5
+
+# Optional Parameters for Models
+hidden_size: 256
+output_size: 2
+activation_func: "relu"
+debug: false

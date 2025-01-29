@@ -1,5 +1,3 @@
-# app/models/noise_model.py
-
 import torch
 import torch.nn as nn
 from app.models.base_model import BaseModel
@@ -15,9 +13,10 @@ class NoiseModel(BaseModel):
         self.noise_level = noise_level
     
     def forward(self, x):
-        x = super(NoiseModel, self).forward(x)
+        logits, activations = super().forward(x)
         # Optionally add noise to logits or activations
         if self.training and self.noise_level > 0.0:
-            noise = torch.randn_like(x) * self.noise_level
-            x = x + noise
-        return x
+            noise = torch.randn_like(logits) * self.noise_level
+            logits = logits + noise
+            activations['fc3_noisy'] = logits  # Optionally store the noisy logits
+        return logits, activations

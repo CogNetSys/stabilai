@@ -2,15 +2,17 @@
 
 import torch
 import torch.nn as nn
-from app.models.surge_collapse_net import SurgeCollapseNet
 from app.utils.optimizer import OrthogonalGradientOptimizer
+from app.utils.losses import StableMaxCrossEntropy
 from app.utils.metrics import run_eval
-from app.utils.visualization import plot_confusion_matrix, plot_roc_curve, plot_metrics
+from app.utils.visualization import plot_confusion_matrix, plot_roc_curve
 from app.utils.gradfilter import gradfilter_ma, gradfilter_ema
-from app.data.data_loader import get_data_loaders, add_gaussian_noise
+from app.data.data_loader import add_gaussian_noise
 import logging
 import os
 from sklearn.metrics import classification_report
+import matplotlib.pyplot as plt
+
 
 def reset_and_inject_noise(model, grad_norms, threshold, noise_level):
     """
@@ -38,6 +40,7 @@ def reset_and_inject_noise(model, grad_norms, threshold, noise_level):
                 reset_params.append(name)
     return reset_params
 
+
 def calculate_activation_entropy(activations):
     """
     Calculate entropy for each layer's activations.
@@ -57,6 +60,7 @@ def calculate_activation_entropy(activations):
         entropy_dict[layer_name] = entropy
     return entropy_dict
 
+
 def calculate_gradient_norms(model):
     """
     Calculate the L2 norm of gradients for each parameter in the model.
@@ -70,6 +74,7 @@ def calculate_gradient_norms(model):
             grad_norm = param.grad.data.norm(2).item()
             grad_norms[name] = grad_norm
     return grad_norms
+
 
 def train_fastgrokkingrush(
     model,
@@ -96,7 +101,7 @@ def train_fastgrokkingrush(
 ):
     """
     Comprehensive training loop with Surge-Collapse, Entropy-Based Diagnostics,
-    and Dataset Noise Injection.
+    Learning Rate Scheduler, Enhanced Early Stopping, and Model Checkpointing.
 
     Args:
         model (nn.Module): The neural network model.
@@ -128,7 +133,9 @@ def train_fastgrokkingrush(
     logging.info(f"[FastGrokkingRush] Training on device={device}...")
 
     best_val_f1 = 0.0
+    best_epoch = 0
     epochs_no_improve = 0
+    lr_adjustments = 0
 
     history = {
         'train_loss': [],
@@ -137,7 +144,10 @@ def train_fastgrokkingrush(
         'val_precision': [],
         'val_recall': [],
         'layer_activation_entropy': {},
-        'reset_params': []
+        'reset_params': [],
+        'best_epoch': 0,
+        'lr_adjustments': 0,
+        'classification_report': ""
     }
 
     # Initialize Grokfast gradient storage
@@ -147,6 +157,18 @@ def train_fastgrokkingrush(
         grads = None  # Will be initialized in gradfilter_ma
     else:
         grads = None  # Not used
+
+    # Initialize Learning Rate Scheduler
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+        optimizer.base_optimizer if hasattr(optimizer, 'base_optimizer') else optimizer,
+        mode='max',
+        factor=0.5,
+        patience=5,
+        verbose=True
+    )
+
+    # Initialize Early Stopping
+    best_model_path = os.path.join(run_dir, 'best_model.pth')
 
     for epoch in range(1, epochs + 1):
         model.train()
@@ -229,29 +251,42 @@ def train_fastgrokkingrush(
             # Confusion Matrix
             fig_cm = plot_confusion_matrix(cm, classes=['0', '1'])
             writer.add_figure("Confusion Matrix/Val", fig_cm, epoch)
+            plt.close(fig_cm)
 
             # ROC Curve
             fig_roc = plot_roc_curve(fpr, tpr, roc_auc)
             writer.add_figure("ROC Curve/Val", fig_roc, epoch)
+            plt.close(fig_roc)
 
             # Classification Report as text
             report_text = classification_report_to_text(report)
             writer.add_text("Classification Report/Val", report_text, epoch)
 
         # Update learning rate scheduler
-        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-            optimizer.base_optimizer, mode='max', factor=0.5, patience=5, verbose=True
-        )
         scheduler.step(val_f1)
+        lr_adjustments = scheduler.num_bad_epochs  # Track LR adjustments
+        history['lr_adjustments'] = lr_adjustments
 
         # Check for improvement
         if val_f1 > best_val_f1:
             best_val_f1 = val_f1
+            best_epoch = epoch
             epochs_no_improve = 0
             # Save the best model
-            os.makedirs(run_dir, exist_ok=True)
-            torch.save(model.state_dict(), os.path.join(run_dir, 'best_model.pth'))
+            torch.save(model.state_dict(), best_model_path)
             logging.info(f"New best model saved with F1: {best_val_f1:.4f}")
+
+            # Save classification report at best epoch
+            history['classification_report'] = classification_report_to_text(report)
+
+            # Save confusion matrix and ROC curve images
+            confusion_matrix_path = os.path.join(run_dir, f"confusion_matrix_epoch_{epoch}.png")
+            fig_cm.savefig(confusion_matrix_path)
+            plt.close(fig_cm)
+
+            roc_curve_path = os.path.join(run_dir, f"roc_curve_epoch_{epoch}.png")
+            fig_roc.savefig(roc_curve_path)
+            plt.close(fig_roc)
         else:
             epochs_no_improve += 1
             logging.info(f"No improvement in F1 for {epochs_no_improve} epoch(s).")
@@ -263,7 +298,7 @@ def train_fastgrokkingrush(
 
         # Reset and inject noise based on gradient norms
         grad_norms = calculate_gradient_norms(model)
-        reset_params = reset_and_inject_noise(model, grad_norms, gradient_threshold, noise_level)
+        reset_params = reset_and_inject_noise(model, grad_norms, threshold=gradient_threshold, noise_level=noise_level)
         history['reset_params'].append(reset_params)
         if reset_params:
             logging.info(f"Epoch {epoch}: Reset and injected noise into parameters: {reset_params}")
@@ -273,17 +308,18 @@ def train_fastgrokkingrush(
         if avg_entropy < entropy_threshold:
             logging.info(f"Epoch {epoch}: Activation entropy ({avg_entropy:.4f}) below threshold ({entropy_threshold}) → Trigger Surge-Collapse")
             # Trigger Surge-Collapse: Reset and inject noise
-            reset_params = reset_and_inject_noise(model, grad_norms, gradient_threshold, noise_level)
+            reset_params = reset_and_inject_noise(model, grad_norms, threshold=gradient_threshold, noise_level=noise_level)
             if reset_params:
                 history['reset_params'][-1].extend(reset_params)
                 logging.info(f"Triggered Surge-Collapse: Reset and injected noise into parameters: {reset_params}")
 
-    # Final metrics plot (optional)
-    if writer:
-        # You can create custom plots here or use external visualization
-        pass
+    # Load the best model before returning history
+    if best_epoch > 0:
+        model.load_state_dict(torch.load(best_model_path))
+        logging.info(f"Best model loaded from {best_model_path}")
 
     return history
+
 
 def classification_report_to_text(report):
     """
@@ -307,103 +343,3 @@ def classification_report_to_text(report):
     accuracy = report.get('accuracy', 0)
     report_str += f"Overall Accuracy: {accuracy:.4f}\n"
     return report_str
-
-
-def main(config_path='app/config.py'):
-    # Load configuration
-    import importlib.util
-    spec = importlib.util.spec_from_file_location("config", config_path)
-    config = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(config)
-    cfg = config.get_config()
-    
-    # Set up logging
-    logging.basicConfig(
-        format="%(asctime)s - %(levelname)s - %(message)s",
-        level=logging.INFO,
-        handlers=[logging.StreamHandler()]
-    )
-    
-    # Set device
-    device = cfg['device'] if 'device' in cfg else ('cuda' if torch.cuda.is_available() else 'cpu')
-    logging.info(f"Using device: {device}")
-    
-    # Create DataLoaders
-    train_loader, val_loader, ood_loader = get_data_loaders(
-        train_size=cfg['train_size'],
-        val_size=cfg['val_size'],
-        ood_size=cfg['ood_size'],
-        input_dim=cfg['input_dim'],
-        batch_size=cfg['batch_size']
-    )
-    
-    # Initialize model based on model_type
-    model_type = cfg['model_type']
-    if model_type == 'base':
-        model = BaseModel(
-            input_size=cfg['input_dim'],
-            hidden_size=cfg['hidden_size'],
-            output_size=cfg['output_size'],
-            use_gat=cfg['use_gat']
-        )
-    elif model_type == 'fastgrok':
-        model = FastGrokModel(
-            input_size=cfg['input_dim'],
-            hidden_size=cfg['hidden_size'],
-            output_size=cfg['output_size'],
-            use_gat=cfg['use_gat']
-        )
-    elif model_type == 'noise':
-        model = NoiseModel(
-            input_size=cfg['input_dim'],
-            hidden_size=cfg['hidden_size'],
-            output_size=cfg['output_size'],
-            use_gat=cfg['use_gat'],
-            noise_level=cfg['noise_level']
-        )
-    else:
-        raise ValueError(f"Unsupported model type: {model_type}")
-    
-    # Initialize optimizer and wrap with OrthogonalGradientOptimizer
-    base_optimizer = torch.optim.Adam(model.parameters(), lr=cfg['learning_rate'], weight_decay=cfg['weight_decay'])
-    optimizer = OrthogonalGradientOptimizer(base_optimizer)
-    
-    # Define loss function
-    if model_type == 'noise':
-        criterion = nn.CrossEntropyLoss()
-    else:
-        criterion = StableMaxCrossEntropy()
-    
-    # Initialize learning rate scheduler
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer.base_optimizer, mode='max', factor=0.5, patience=5)
-    
-    # Initialize TensorBoard writer
-    writer = SummaryWriter(log_dir=os.path.join(cfg['run_dir'], 'training_logs'))
-    
-    # Train the model
-    history = train_fastgrokkingrush(
-        model=model,
-        train_loader=train_loader,
-        val_loader=val_loader,
-        criterion=criterion,
-        optimizer=optimizer,
-        device=device,
-        epochs=cfg['num_epochs'],
-        early_stopping_patience=cfg['early_stopping_patience'],
-        writer=writer,
-        use_grokfast=cfg.get('use_grokfast', False),
-        grokfast_type=cfg.get('grokfast_type', 'ema'),
-        alpha=cfg.get('alpha', 0.98),
-        lamb=cfg.get('lamb', 2.0),
-        window_size=cfg.get('window_size', 100),
-        filter_type=cfg.get('filter_type', 'mean'),
-        warmup=cfg.get('warmup', True),
-        gradient_threshold=cfg.get('gradient_threshold', 1e-3),
-        noise_level=cfg.get('noise_level', 1e-3),
-        dataset_noise_level=cfg.get('dataset_noise_level', 0.0),
-        entropy_threshold=cfg.get('entropy_threshold', 1.5),
-        run_dir=cfg.get('run_dir', '.')
-    )
-    
-    writer.close()
-    logging.info("Training completed.")

@@ -1,161 +1,170 @@
-# app/main.py
-
 import argparse
-import json
 import os
 import torch
 from torch.utils.tensorboard import SummaryWriter
-from app.models import SurgeCollapseNet
-from app.training import train_fastgrokkingrush   
-from app.data.data_loader import get_data_loaders    
-from app.utils.optimizer import OrthogonalGradientOptimizer
-from app.utils.losses import StableMaxCrossEntropy  
 import logging
+from app.config import load_config, Config
+from app.models import BaseModel, FastGrokModel, NoiseModel, SurgeCollapseNet  # Import all models
+from app.training import train_fastgrokkingrush
+from app.data.data_loader import get_data_loaders
+from app.utils.optimizer import OrthogonalGradientOptimizer
+from app.utils.losses import StableMaxCrossEntropy
 
-logging.basicConfig(
-    format="%(asctime)s - %(levelname)s - %(message)s",
-    level=logging.INFO,  # Set to DEBUG for more verbosity
-    handlers=[logging.StreamHandler()]
-)
 
-def parse_args():
+def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Train and evaluate the model.")
-    parser.add_argument('--config', type=str, help='Path to the configuration file')
-
-    # Add other arguments for flexibility
-    parser.add_argument('--train_size', type=int, default=4000, help='Training dataset size')
-    parser.add_argument('--val_size', type=int, default=1000, help='Validation dataset size')
-    parser.add_argument('--ood_size', type=int, default=1000, help='OOD dataset size')
-    parser.add_argument('--input_dim', type=int, default=128, help='Input feature dimension')
-    parser.add_argument('--batch_size', type=int, default=64, help='Batch size for training')
-    parser.add_argument('--model_type', type=str, choices=['base', 'fastgrok', 'noise'], default='base', help='Type of model to train')
-    parser.add_argument('--use_gat', action='store_true', help='Enable Graph Attention Network (GAT)')
-    parser.add_argument('--num_epochs', type=int, default=100, help='Number of training epochs')
-    parser.add_argument('--learning_rate', type=float, default=0.001, help='Learning rate')
-    parser.add_argument('--weight_decay', type=float, default=1e-5, help='Weight decay for optimizer')
-    parser.add_argument('--run_dir', type=str, default='runs', help='Directory to save logs and models')
+    parser.add_argument('--config', type=str, default='config/config.yaml', help='Path to the configuration file')
     return parser.parse_args()
 
-def load_config(config_path):
+
+def setup_logging(run_dir: str):
     """
-    Load configuration from a JSON file.
+    Set up logging to both console and a file.
+
+    Args:
+        run_dir (str): Directory where logs will be saved.
     """
-    if not os.path.exists(config_path):
-        raise FileNotFoundError(f"Config file not found: {config_path}")
-    with open(config_path, 'r') as file:
-        config = json.load(file)
-    return config
+    os.makedirs(run_dir, exist_ok=True)
+    log_file = os.path.join(run_dir, 'training.log')
+
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s - %(levelname)s - %(message)s",
+        handlers=[
+            logging.FileHandler(log_file),
+            logging.StreamHandler()
+        ]
+    )
+
 
 def main():
     args = parse_args()
 
-    # Load config file if provided
-    if args.config:
-        config = load_config(args.config)
-        print(f"Loaded configuration from {args.config}:")
-        print(config)
+    # Load configuration
+    config = load_config(args.config)
 
-        # Overwrite command-line arguments with config values
-        for key, value in config.items():
-            setattr(args, key, value)
+    # Set up run directory
+    run_dir = os.path.join(config.run_dir, config.model_type)
+    os.makedirs(run_dir, exist_ok=True)
 
-    # Print final configuration
-    print("Final configuration:")
-    print(vars(args))
+    # Set up logging
+    setup_logging(run_dir)
+    logging.info("======================================")
+    logging.info("Training Started")
+    logging.info("======================================")
+    logging.info(f"Configuration: {config}")
+
+    # Initialize TensorBoard SummaryWriter
+    tensorboard_logs = os.path.join(run_dir, 'tensorboard_logs')
+    writer = SummaryWriter(log_dir=tensorboard_logs)
 
     # Set device
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    print(f"Using device: {device}")
+    logging.info(f"Using device: {device}")
 
     # Prepare data loaders
     train_loader, val_loader, ood_loader = get_data_loaders(
-        train_size=args.train_size,
-        val_size=args.val_size,
-        ood_size=args.ood_size,
-        input_dim=args.input_dim,
-        batch_size=args.batch_size
+        train_size=config.train_size,
+        val_size=config.val_size,
+        ood_size=config.ood_size,
+        input_dim=config.input_dim,
+        batch_size=config.batch_size
     )
 
     # Initialize the model based on model_type
-    if args.model_type == 'base':
-        print("Initializing Base Model...")
-        model = SurgeCollapseNet(
-            input_size=args.input_dim,
-            hidden_size=256,
-            output_size=2,
-            use_batch_norm=True,
-            use_dropout=False,
-            activation_func='relu',
-            debug=False
+    logging.info(f"Initializing {config.model_type.capitalize()} Model...")
+    if config.model_type == 'base':
+        model = BaseModel(
+            input_size=config.input_dim,
+            hidden_size=config.hidden_size,
+            output_size=config.output_size,
+            use_batch_norm=config.use_batch_norm,
+            use_dropout=config.use_dropout,
+            activation_func=config.activation_func,
+            debug=config.debug
         )
-    elif args.model_type == 'fastgrok':
-        print("Initializing FastGrok Model...")
-        # You can customize FastGrokModel differently if needed
-        model = SurgeCollapseNet(
-            input_size=args.input_dim,
-            hidden_size=256,
-            output_size=2,
-            use_batch_norm=True,
-            use_dropout=False,
-            activation_func='relu',
-            debug=False
+    elif config.model_type == 'fastgrok':
+        model = FastGrokModel(
+            input_size=config.input_dim,
+            hidden_size=config.hidden_size,
+            output_size=config.output_size,
+            use_gat=config.use_grokfast,  # Assuming 'use_grokfast' relates to GAT usage
+            use_dropout=config.use_dropout,
+            activation_func=config.activation_func,
+            debug=config.debug
         )
-    elif args.model_type == 'noise':
-        print("Initializing Noise Model...")
-        # You can customize NoiseModel differently if needed
-        model = SurgeCollapseNet(
-            input_size=args.input_dim,
-            hidden_size=256,
-            output_size=2,
-            use_batch_norm=True,
-            use_dropout=False,
-            activation_func='relu',
-            debug=False
+    elif config.model_type == 'noise':
+        model = NoiseModel(
+            input_size=config.input_dim,
+            hidden_size=config.hidden_size,
+            output_size=config.output_size,
+            use_gat=config.use_grokfast,  # Assuming 'use_grokfast' relates to GAT usage
+            use_dropout=config.use_dropout,
+            noise_level=config.noise_level,
+            activation_func=config.activation_func,
+            debug=config.debug
         )
     else:
-        raise ValueError(f"Unsupported model type: {args.model_type}")
+        raise ValueError(f"Unsupported model_type: {config.model_type}")
 
     model.to(device)
+    logging.info(f"Model initialized: {model}")
 
     # Set up optimizer and loss function
     optimizer = OrthogonalGradientOptimizer(
-        torch.optim.Adam(model.parameters(), lr=args.learning_rate, weight_decay=args.weight_decay)
+        torch.optim.Adam(model.parameters(), lr=config.learning_rate, weight_decay=config.weight_decay)
     )
     criterion = StableMaxCrossEntropy()
 
-    # Initialize TensorBoard SummaryWriter
-    run_dir = os.path.join(args.run_dir, args.model_type)
-    os.makedirs(run_dir, exist_ok=True)
-    writer = SummaryWriter(log_dir=os.path.join(run_dir, 'tensorboard_logs'))
-
     # Train the model
-    print(f"Training {args.model_type} model...")
-    train_fastgrokkingrush(
+    logging.info(f"Starting training for {config.num_epochs} epochs...")
+    history = train_fastgrokkingrush(
         model=model,
         train_loader=train_loader,
         val_loader=val_loader,
         criterion=criterion,
         optimizer=optimizer,
         device=device,
-        epochs=args.num_epochs,
-        early_stopping_patience=8,  # You can make this configurable
+        epochs=config.num_epochs,
+        early_stopping_patience=config.early_stopping_patience,
         writer=writer,
-        use_grokfast=args.__dict__.get('use_grokfast', False),
-        grokfast_type=args.__dict__.get('grokfast_type', 'ema'),
-        alpha=args.__dict__.get('alpha', 0.98),
-        lamb=args.__dict__.get('lamb', 2.0),
-        window_size=args.__dict__.get('window_size', 100),
-        filter_type=args.__dict__.get('filter_type', 'mean'),
-        warmup=args.__dict__.get('warmup', True),
-        gradient_threshold=args.__dict__.get('gradient_threshold', 0.001),
-        noise_level=args.__dict__.get('noise_level', 0.001),
-        dataset_noise_level=args.__dict__.get('dataset_noise_level', 0.0),
-        entropy_threshold=args.__dict__.get('entropy_threshold', 1.5),
+        use_grokfast=config.use_grokfast,
+        grokfast_type=config.grokfast_type,
+        alpha=config.alpha,
+        lamb=config.lamb,
+        window_size=config.window_size,
+        filter_type=config.filter_type,
+        warmup=config.warmup,
+        gradient_threshold=config.gradient_threshold,
+        noise_level=config.noise_level,
+        dataset_noise_level=config.dataset_noise_level,
+        entropy_threshold=config.entropy_threshold,
         run_dir=run_dir
     )
 
+    # Save final model
+    model_path = os.path.join(run_dir, 'final_model.pth')
+    torch.save(model.state_dict(), model_path)
+    logging.info(f"Final model saved to {model_path}")
+
+    # Generate report using Jinja2
+    from jinja2 import Environment, FileSystemLoader
+
+    env = Environment(loader=FileSystemLoader('templates'))
+    template = env.get_template('report_template.md.j2')
+    report_content = template.render(history=history, config=config)
+
+    report_path = os.path.join(run_dir, 'training_report.md')
+    with open(report_path, 'w') as f:
+        f.write(report_content)
+
+    logging.info(f"Training report generated at {report_path}")
+
     writer.close()
-    print(f"Model training completed. Results saved to {run_dir}")
+    logging.info("======================================")
+    logging.info("Training Completed")
+    logging.info("======================================")
+
 
 if __name__ == "__main__":
     main()

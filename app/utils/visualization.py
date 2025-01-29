@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.metrics import roc_curve, auc
 
-# visualization.py
 
 def plot_confusion_matrix(cm, classes, title='Confusion Matrix'):
     """
@@ -18,6 +17,7 @@ def plot_confusion_matrix(cm, classes, title='Confusion Matrix'):
     ax.set_xticklabels(classes)
     ax.set_yticklabels(classes)
     return fig
+
 
 def plot_roc_curve(fpr, tpr, roc_auc, title='Receiver Operating Characteristic'):
     """
@@ -34,13 +34,16 @@ def plot_roc_curve(fpr, tpr, roc_auc, title='Receiver Operating Characteristic')
     ax.legend(loc='lower right')
     return fig
 
+
 def plot_metrics(train_loss, val_loss, val_f1, title='Training Metrics'):
     """
     Plot training and validation loss and validation F1 score.
     """
+    import matplotlib.pyplot as plt
+
     epochs = range(1, len(train_loss) + 1)
     plt.figure(figsize=(12,5))
-    
+
     # Plot Loss
     plt.subplot(1,2,1)
     plt.plot(epochs, train_loss, label='Train Loss')
@@ -49,7 +52,7 @@ def plot_metrics(train_loss, val_loss, val_f1, title='Training Metrics'):
     plt.ylabel('Loss')
     plt.title('Loss Over Epochs')
     plt.legend()
-    
+
     # Plot F1 Score
     plt.subplot(1,2,2)
     plt.plot(epochs, val_f1, label='Validation F1 Score')
@@ -57,7 +60,8 @@ def plot_metrics(train_loss, val_loss, val_f1, title='Training Metrics'):
     plt.ylabel('F1 Score')
     plt.title('Validation F1 Score Over Epochs')
     plt.legend()
-    
+
     plt.suptitle(title)
     plt.tight_layout()
-    plt.show()
+    plt.savefig('loss_f1_metrics.png')
+    plt.close()

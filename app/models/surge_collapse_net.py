@@ -126,6 +126,52 @@ class SurgeCollapseNet(nn.Module):
         self.gradients = {}
         self._register_hooks()
 
+    # Rest of the class remains unchanged
+    """
+    SurgeCollapseNet architecture with standard linear layers.
+    """
+    def __init__(
+        self,
+        input_size=128,
+        hidden_size=256,
+        output_size=2,
+        use_batch_norm=True,
+        use_dropout=False,
+        dropout_rate=0.5,
+        activation_func='relu',
+        debug=False
+    ):
+        super(SurgeCollapseNet, self).__init__()
+        self.use_batch_norm = use_batch_norm
+        self.use_dropout = use_dropout
+        self.dropout_rate = dropout_rate
+        self.debug = debug
+
+        # Define layers
+        self.fc1 = nn.Linear(input_size, hidden_size)
+        self.activation = self._get_activation(activation_func)
+        
+        if self.use_batch_norm:
+            self.bn1 = nn.BatchNorm1d(hidden_size)
+        
+        if self.use_dropout:
+            self.dropout = nn.Dropout(self.dropout_rate)
+        
+        self.fc2 = nn.Linear(hidden_size, hidden_size)
+        
+        if self.use_batch_norm:
+            self.bn2 = nn.BatchNorm1d(hidden_size)
+        
+        if self.use_dropout:
+            self.dropout2 = nn.Dropout(self.dropout_rate)
+        
+        self.fc3 = nn.Linear(hidden_size, output_size)
+        
+        # Hooks for activations and gradients
+        self.activations = {}
+        self.gradients = {}
+        self._register_hooks()
+
     def _get_activation(self, activation_func):
         """
         Return the activation function based on the name.

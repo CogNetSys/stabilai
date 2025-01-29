@@ -1,6 +1,6 @@
 # 📊 **Contributions**
 
-The **Surge-Collapse Training with Entropy Dynamics** project is a collaborative effort involving the combined expertise and dedication of key contributors. This section delineates the distinct contributions of each author, highlighting their unique roles and collaborative synergy.
+The **StabilAI** project builds upon the expertise and contributions of key developers whose open-source work has been instrumental in its creation. This section acknowledges their contributions, outlining their specific roles in shaping the project."
 
 ---
 
@@ -10,9 +10,9 @@ The **Surge-Collapse Training with Entropy Dynamics** project is a collaborative
 
 ### **Contributions:**
 
-- **💡 Conceptualization**: Spearheaded the foundational ideas behind Surge-Collapse Training and its integration with entropy dynamics.
-- **🛠️ Model Development**: Designed and implemented the core Auto-Regressive Neural Network architecture.
-- **📝 Documentation**: Authored the comprehensive notebook summary, outlining the project's objectives, mechanisms, and key components.
+- **💡 Conceptualization**: Spearheaded the foundational ideas behind *Surge-Collapse Training* and its integration with *Entropy Dynamics*.
+- **🛠️ Model Development**: Designed and implemented the core *Auto-Regressive Neural Network* architecture.
+- **📝 Documentation**: Authored the comprehensive notebook summary, outlining the *Surge-Collapse Training with Entropy Dynamics* objectives, mechanisms, and key components.
 - **🔬 Theoretical Insights**: Provided critical analysis linking entropy dynamics with neural network training stability.
 
 ---
@@ -48,7 +48,7 @@ The **Surge-Collapse Training with Entropy Dynamics** project is a collaborative
 
 **Affiliation**: Seoul National University, Korea
 
-**Paper**: [Grokfast: Accelerated Grokking by Amplifying Slow Gradients](https://arxiv.org/html/2405.20233v2)
+**Paper**: [*Grokfast: Accelerated Grokking by Amplifying Slow Gradients, 2024*](https://arxiv.org/html/2405.20233v2)
 
 ### **Contributions**:
 

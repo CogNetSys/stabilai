@@ -1,6 +1,5 @@
-# app/utils/metrics.py
-
 import torch
+import torch.nn as nn  # Add this line
 import torch.nn.functional as F
 from sklearn.metrics import f1_score, precision_score, recall_score, confusion_matrix, classification_report, roc_curve, auc
 
@@ -25,23 +24,25 @@ def run_eval(model, loader, criterion, device):
     all_labels = []
     all_preds = []
     all_probs = []
-    
+
     with torch.no_grad():
         for inputs, targets in loader:
             inputs, targets = inputs.to(device), targets.to(device)
             outputs, _ = model(inputs)
             loss = criterion(outputs, targets)
             total_loss += loss.item()
-            
-            probs = F.softmax(outputs, dim=1)[:, 1]
+
+            probs = nn.functional.softmax(outputs, dim=1)[:, 1]
             preds = torch.argmax(outputs, dim=1)
-            
+
             all_labels.extend(targets.cpu().numpy())
             all_preds.extend(preds.cpu().numpy())
             all_probs.extend(probs.cpu().numpy())
-    
+
     avg_loss = total_loss / len(loader)
-    f1, precision, recall = calculate_metrics(all_labels, all_preds, all_probs)
+    f1 = f1_score(all_labels, all_preds, zero_division=0)
+    precision = precision_score(all_labels, all_preds, zero_division=0)
+    recall = recall_score(all_labels, all_preds, zero_division=0)
     cm = confusion_matrix(all_labels, all_preds)
     report = classification_report(all_labels, all_preds, output_dict=True, zero_division=0)
     try:
@@ -50,5 +51,5 @@ def run_eval(model, loader, criterion, device):
     except ValueError:
         # Handle cases with only one class in y_true
         fpr, tpr, roc_auc = [0.0, 1.0], [0.0, 1.0], 0.0
-    
+
     return avg_loss, f1, precision, recall, cm, report, fpr, tpr, roc_auc

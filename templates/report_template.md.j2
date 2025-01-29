@@ -1,0 +1,69 @@
+# Training Report
+
+## Configuration
+
+yaml
+{{ config.dict() }}
+
+## Training History
+
+### Loss
+
+![Loss](loss.png)
+
+### Validation Metrics
+
+![F1 Score](f1_score.png)
+![Precision](precision.png)
+![Recall](recall.png)
+![ROC AUC](roc_auc.png)
+
+## Confusion Matrix
+
+![Confusion Matrix](confusion_matrix_epoch_{{ history.best_epoch }}.png)
+
+## ROC Curve
+
+![ROC Curve](roc_curve_epoch_{{ history.best_epoch }}.png)
+
+## Classification Report
+
+```
+{{ history.classification_report }}
+```
+
+## Model Checkpoints
+
+- **Best Model**: `best_model.pth`
+- **Final Model**: `final_model.pth`
+
+## Learning Rate Adjustments
+
+- Learning rate was adjusted **{{ history.lr_adjustments }}** times based on validation F1-score improvements.
+
+## Early Stopping
+
+- **Patience:** {{ history.early_stopping_patience }} epochs  
+- **Epoch Stopped:** {{ history.best_epoch }}  
+- Training stopped early due to no improvement in validation performance.
+
+## Surge-Collapse Events
+
+- **Total Parameter Resets:** {{ history.reset_params | length }}  
+- Parameters reset due to:
+  - Gradient norms falling below the threshold
+  - Activation entropy below the defined threshold
+
+## Activation Entropy Analysis
+
+| Layer Name       | Average Entropy |
+|-----------------|----------------|
+{% for layer, entropy_list in history.layer_activation_entropy.items() %}
+| {{ layer }}      | {{ entropy_list | sum / entropy_list | length }} |
+{% endfor %}
+
+## Additional Notes
+
+- Training was monitored using **TensorBoard**, with logs stored in `tensorboard_logs/`.
+- The model used **{{ config.model_type }}** architecture with **{{ 'GAT Enabled' if config.use_gat else 'GAT Disabled' }}**.
+- Final evaluation metrics and plots can be found in the run directory.
